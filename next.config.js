@@ -4,15 +4,19 @@ const nextConfig = {
   images: {
     remotePatterns: [
       {
-        protocol: 'https',
-        hostname: '*.googleusercontent.com',
+        protocol: "http",
+        hostname: "localhost",
       },
       {
-        protocol: 'https',
-        hostname: 'dawid-food-ordering.s3.amazonaws.com',
+        protocol: "https",
+        hostname: "*.googleusercontent.com",
       },
-    ]
-  }
-}
+      {
+        protocol: "https",
+        hostname: process.env.AWS_BUCKET + ".s3.amazonaws.com",
+      },
+    ],
+  },
+};
 
-module.exports = nextConfig
+module.exports = nextConfig;

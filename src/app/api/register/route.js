@@ -1,51 +1,32 @@
 import { User } from "@/models/User";
-import mongoose from "mongoose";
+import connectDB from "@/libs/connectDB";
 import bcrypt from "bcrypt";
 
 export async function POST(req) {
+  await connectDB();
+
   try {
     const body = await req.json();
-    mongoose.connect(process.env.MONGO_URL);
+    const { password, email } = body;
 
-    const pass = body.password;
-    const email = body.email;
-
-    if (!pass?.length || pass.length < 5) {
-      new Error("password must be at least 5 characters");
-    }
-
-    const checkExitEmail = User.findOne({ email }).lean();
-
-    if (checkExitEmail) {
-      const data = {
-        status: 400,
-        message: "Username or email already exists",
-        metadata: [],
-      };
-      return Response.json(data);
+    if (!password) {
+      new Error("Password is required");
     }
 
     const salt = bcrypt.genSaltSync(10);
-    body.password = bcrypt.hashSync(pass, salt);
+    body.password = bcrypt.hashSync(password, salt);
+
+ 
+    const checkExitEmail = await User.findOne({ email }).lean();
+
+    if (checkExitEmail) {
+      return Response.json("Username or email already exists", { status: 400 });
+    }
 
     const createdUser = await User.create(body);
+    return Response.json(createdUser, { status: 201 });
 
-    const cloneCreatedUser = [...createdUser];
-    delete cloneCreatedUser.password;
-
-    const data = {
-      status: 201,
-      message: "Username or email already exists",
-      metadata: cloneCreatedUser,
-    };
-
-    return Response.json(data);
   } catch (error) {
-    const data = {
-      status: 400,
-      message: "error",
-      metadata: [],
-    };
-    return Response.json(data);
+    return Response.json(error, { status: 402 });
   }
 }

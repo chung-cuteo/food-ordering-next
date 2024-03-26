@@ -3,53 +3,42 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 export default function RegisterPage() {
+  const router = useRouter();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [createStatus, setCreateStatus] = useState("");
-  const [userCreated, setUserCreated] = useState(false);
 
-  const handelSubmit = async (event) => {
+  const handleFormSubmit = async (event) => {
     event.preventDefault();
     setCreateStatus("loading");
 
-    const response = await fetch("/api/register", {
+    if (!email && !password) {
+      throw Error("Email and Password are required");
+    }
+
+    const res = await fetch("/api/register", {
       method: "POST",
       body: JSON.stringify({ email, password }),
       headers: { "Content-Type": "application/json" },
     });
 
-    const responseJson = await response.json();
-
-    setEmail("");
-    setPassword("");
-
-    if (responseJson.status === 400) {
-      if (responseJson.message === "error") {
-        setCreateStatus("error");
-      }
-      setUserCreated(true);
+    if (res.ok) {
+      setCreateStatus("sucessed");
+      setEmail("");
+      setPassword("");
+      router.push("/login");
+    } else {
+      setCreateStatus("error");
     }
-
-    setCreateStatus("sucessed");
   };
 
   return (
     <section className="mt-8">
       <h1 className="text-center text-primary text-4xl mb-4">Register</h1>
-
-      {userCreated && (
-        <div className="my-4 text-center">
-          User created.
-          <br />
-          Now you can{" "}
-          <Link className="underline" href={"/login"}>
-            Login &raquo;
-          </Link>
-        </div>
-      )}
-
       {createStatus === "error" && (
         <div className="my-4 text-center">
           An error has occurred.
@@ -58,7 +47,7 @@ export default function RegisterPage() {
         </div>
       )}
 
-      <form className="block max-w-xs mx-auto" onSubmit={handelSubmit}>
+      <form className="block max-w-xs mx-auto" onSubmit={handleFormSubmit}>
         <input
           type="email"
           placeholder="email"
